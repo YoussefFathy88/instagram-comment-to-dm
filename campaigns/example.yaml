@@ -1,0 +1,45 @@
+# Comment-to-DM campaign. Copy to campaigns/<name>.yaml, edit, then (from backend/):
+#   .venv/Scripts/python -m app.cli engage-save ../campaigns/<name>.yaml
+#   .venv/Scripts/python -m app.cli engage-run --campaign <name> --dry-run     # shows who would get what; sends nothing
+#   .venv/Scripts/python -m app.cli engage-approve <name>                      # only after you have reviewed the dry run
+#   .venv/Scripts/python -m app.cli engage-run                                 # every approved campaign (Task Scheduler)
+# Editing anything below (except the limits) drops the approval until approved again.
+
+name: example
+
+# Reel/post links, media ids (from `engage-media`), or "latest" (newest reel).
+media:
+  - https://www.instagram.com/reel/REPLACE_ME/
+
+# A comment matches if it contains any keyword. Case, Arabic spelling (أ/ا, ة/ه, ى/ي), harakat,
+# emoji and stretched letters ("skilllll", "سكييييل") are ignored.
+keywords:
+  - skill
+  - سكيل
+
+# The private reply (DM). Sent once per comment, within 7 days of the comment. Max 1000 bytes
+# (Arabic letters are 2 bytes each, so about 450 Arabic characters). {username} is replaced.
+dm_message: |
+  أهلاً {username} 👋
+  ده الـ skill اللي وعدتك بيه في الفيديو: https://REPLACE_ME
+  لو عندك أي سؤال ابعتلي هنا.
+
+# Public replies under the comment, rotated so neighbouring comments don't get the same text.
+replies:
+  - بعتلك الـ skill في الـ DM 📩
+  - شوف رسايلك، الـ skill عندك ✅
+  - وصلك في الخاص 🔥
+  - بعتهولك، قولي رأيك بعد ما تجربه 👌
+  - الـ skill في الـ inbox بتاعك 📬
+  - تمام، بعتلك اللينك في الرسايل 🙌
+  - check your DMs 📩
+  - اتبعتلك، لو مش لاقيه بص في message requests 👀
+  - عندك في الخاص ✨
+  - بعتلك، استمتع بيه 🚀
+
+# Public reply when the DM fails (e.g. the user blocks message requests). Empty = no reply then.
+fallback_reply: مقدرتش أبعتلك DM 🙏 ابعتلي رسالة وأنا أبعتهولك
+
+scan_limit: 100            # newest N comments per post, per run
+max_actions_per_run: 50    # ~3 API calls each (~160/run); hourly runs stay under Meta's 200 calls/hour
+history_check: true        # also skip users whose conversation already has a similar DM (e.g. sent by hand)

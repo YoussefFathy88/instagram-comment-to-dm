@@ -1,0 +1,11 @@
+.env
+data/
+logs/*
+!logs/.gitkeep
+__pycache__/
+.venv/
+.pytest_cache/
+*.egg-info/
+*.db
+*.db-wal
+*.db-shm

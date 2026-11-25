@@ -1,0 +1,371 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Comment to DM</title>
+<style>
+  :root {
+    --bg: #f6f6f8; --card: #ffffff; --fg: #1b1b1f; --muted: #686874; --line: #e3e3ea; --accent: #3b5bdb;
+    --sent: #1f7a4d; --already: #1d5fb4; --you: #b42318; --waiting: #8a5a00; --other: #6b6b76;
+    --sent-bg: #e7f5ee; --already-bg: #e8f0fb; --you-bg: #fdecea; --waiting-bg: #fbf3e2; --other-bg: #efeff3;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #101014; --card: #18181d; --fg: #ececf1; --muted: #a0a0ab; --line: #2a2a32; --accent: #8ea2ff;
+      --sent: #4cc38a; --already: #6aa8ff; --you: #ff6b5e; --waiting: #e3b341; --other: #a3a3ad;
+      --sent-bg: #13281e; --already-bg: #142235; --you-bg: #33181a; --waiting-bg: #2e2513; --other-bg: #222228;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--fg); font: 14px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 1180px; margin: 0 auto; padding: 20px 16px 48px; }
+  header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
+  h1 { font-size: 1.35rem; margin: 0; }
+  h2 { font-size: 0.95rem; margin: 0 0 10px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; margin-bottom: 16px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 16px; }
+  .row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+  .muted { color: var(--muted); }
+  select, input, button { font: inherit; color: var(--fg); background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 7px 10px; }
+  button { cursor: pointer; }
+  button.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+  button.danger { color: var(--you); }
+  button:disabled { opacity: .5; cursor: not-allowed; }
+  input[type=number] { width: 80px; }
+  .pill { display: inline-block; border-radius: 999px; padding: 2px 10px; font-weight: 600; font-size: 12px; }
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 16px; }
+  .stat { border-radius: 12px; padding: 12px 14px; cursor: pointer; border: 2px solid transparent; }
+  .stat b { display: block; font-size: 1.6rem; line-height: 1.2; }
+  .stat.on { border-color: currentColor; }
+  .g-sent { color: var(--sent); background: var(--sent-bg); } .g-already { color: var(--already); background: var(--already-bg); }
+  .g-you { color: var(--you); background: var(--you-bg); } .g-waiting { color: var(--waiting); background: var(--waiting-bg); }
+  .g-other { color: var(--other); background: var(--other-bg); } .g-all { color: var(--fg); background: var(--card); border: 1px solid var(--line); }
+  .dm { white-space: pre-wrap; unicode-bidi: plaintext; text-align: start; background: var(--bg); border-radius: 8px; padding: 10px; margin: 8px 0 0; max-height: 220px; overflow: auto; }
+  .banner { border-radius: 10px; padding: 10px 14px; margin-bottom: 16px; display: none; }
+  .banner.show { display: block; }
+  .scroll { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; min-width: 860px; }
+  th, td { text-align: start; padding: 7px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: 12px; position: sticky; top: 0; background: var(--card); }
+  td.t { max-width: 280px; unicode-bidi: plaintext; }
+  a { color: inherit; }
+  .kv { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; }
+  details summary { cursor: pointer; color: var(--muted); margin-top: 8px; }
+  .camps { display: flex; gap: 10px; overflow-x: auto; padding: 2px 2px 6px; margin-bottom: 16px; }
+  .camp { flex: 0 0 auto; min-width: 210px; max-width: 280px; text-align: start; border: 2px solid var(--line); border-radius: 12px; padding: 10px 12px; }
+  .camp.on { border-color: var(--accent); }
+  .camp .name { font-weight: 700; display: flex; justify-content: space-between; gap: 8px; align-items: center; }
+  .camp .mini { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .camp .mini b { color: var(--fg); font-weight: 600; }
+  .camp-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+  .camp-head h2 { margin: 0; font-size: 1.15rem; color: var(--fg); text-transform: none; letter-spacing: 0; }
+  ul.replies { margin: 8px 0 0; padding-inline-start: 18px; unicode-bidi: plaintext; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Comment → DM control board</h1>
+    <span class="muted" id="jobLine">No job yet.</span>
+  </header>
+
+  <div id="banner" class="banner"></div>
+
+  <h2>Campaigns</h2>
+  <nav class="camps" id="camps" aria-label="Campaigns"></nav>
+
+  <div class="camp-head">
+    <div class="row"><h2 id="campTitle"></h2><span id="campStatus"></span></div>
+    <div class="row">
+      <button id="approveBtn">Approve / resume</button>
+      <button class="danger" id="pauseBtn">Pause</button>
+    </div>
+  </div>
+
+  <div class="stats" id="stats"></div>
+
+  <div class="grid">
+    <section class="card">
+      <h2>Send</h2>
+      <div class="row">
+        <label for="batch">Batch size</label><input type="number" id="batch" min="1" value="50">
+        <button class="primary" id="runBtn">Send next batch</button>
+      </div>
+      <div class="row" style="margin-top:10px">
+        <button id="dryBtn">Dry run (preview, sends nothing)</button>
+        <button id="syncBtn">Refresh from Instagram</button>
+      </div>
+      <p class="muted" style="margin:12px 0 0">Buttons act on the campaign selected above.</p>
+    </section>
+
+    <section class="card">
+      <h2>Scheduler (all approved campaigns)</h2>
+      <div class="kv" id="schedKv"></div>
+      <div class="row" style="margin-top:12px">
+        <label for="every">Every</label>
+        <select id="every"><option value="30">30 min</option><option value="60" selected>1 hour</option><option value="120">2 hours</option><option value="240">4 hours</option></select>
+        <button class="primary" id="schedOn">Enable</button>
+        <button class="danger" id="schedOff">Disable</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>What it sends</h2>
+      <div class="muted" id="campKeywords"></div>
+      <div id="campLinks" style="margin-top:6px"></div>
+      <details><summary>DM text</summary><div class="dm" id="campDm"></div></details>
+      <details><summary id="repliesSummary">Public replies</summary><ul class="replies" id="campReplies"></ul></details>
+    </section>
+  </div>
+
+  <section class="card" id="previewCard" style="display:none; margin-bottom:16px">
+    <h2>Dry run preview</h2>
+    <div class="scroll"><table><thead><tr><th>#</th><th>User</th><th>Comment</th><th>Would do</th><th>Public reply</th></tr></thead><tbody id="previewBody"></tbody></table></div>
+  </section>
+
+  <section class="card" style="margin-bottom:16px">
+    <h2>Recent runs (scheduler, board, command line)</h2>
+    <div class="scroll"><table>
+      <thead><tr><th>When</th><th>Started by</th><th>Result</th><th>Why it stopped</th><th>API calls</th></tr></thead>
+      <tbody id="runs"></tbody>
+    </table></div>
+  </section>
+
+  <section class="card">
+    <div class="row" style="justify-content:space-between; margin-bottom:10px">
+      <h2 style="margin:0">Comments</h2>
+      <input type="search" id="search" placeholder="Search username or comment">
+    </div>
+    <div class="scroll"><table>
+      <thead><tr><th>#</th><th>User</th><th>Comment</th><th>Commented</th><th>Status</th><th>Updated</th><th>DM deadline</th><th>Public reply</th><th>Note</th></tr></thead>
+      <tbody id="rows"></tbody>
+    </table></div>
+  </section>
+</main>
+
+<script>
+const STATES = {
+  done: ["Sent by engine: DM + reply", "sent"], dm_only: ["Sent by engine: DM only", "sent"],
+  skipped_history: ["Found already sent (your DM)", "already"], skipped_same_user: ["Already sent (same person)", "already"],
+  queued: ["Waiting for a batch", "waiting"], dm_failed: ["DM failed: send by hand", "you"],
+  skipped_expired: ["Expired (7 days): send by hand", "you"], pending: ["Interrupted: next run checks the chat", "you"],
+  no_keyword: ["No keyword", "other"],
+};
+const GROUPS = [["all", "All"], ["sent", "a. Sent by engine"], ["already", "b. Found already sent"], ["you", "c. Needs you"], ["waiting", "Waiting"], ["other", "No keyword"]];
+const TZ = undefined; // undefined = the browser's own timezone
+const fmt = (s) => s ? new Intl.DateTimeFormat("en-GB", { timeZone: TZ, weekday: "short", day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }).format(new Date(s)) : "";
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const $ = (id) => document.getElementById(id);
+
+let timer = null;
+const schedule = (ms) => { clearTimeout(timer); timer = setTimeout(poll, ms); };
+let campaigns = [], current = null, actions = [], filter = "all", lastJobId = null, wasBusy = false, isBusy = false;
+
+async function api(path, opts = {}) {
+  const r = await fetch(path, { headers: { "Content-Type": "application/json" }, ...opts });
+  const body = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(body.detail || r.statusText);
+  return body;
+}
+function banner(text, group) {
+  const b = $("banner");
+  b.className = text ? `banner show g-${group}` : "banner";
+  b.textContent = text || "";
+}
+
+// Remembered choice: #campaign-name in the address, else the last one picked here, else the newest campaign.
+function savedChoice() {
+  const hash = decodeURIComponent(location.hash.slice(1));
+  if (hash) return hash;
+  try { return localStorage.getItem("campaign") || ""; } catch { return ""; }
+}
+
+async function loadCampaigns() {
+  campaigns = (await api("/api/engagement/campaigns")).slice().reverse();  // newest first
+  const want = current?.id || savedChoice();
+  current = campaigns.find((c) => c.id === want || c.name === want) || campaigns[0] || null;
+  renderCampaignList();
+  renderCampaign();
+}
+
+function statusOf(c) {
+  return c.approved ? ["Approved", "sent"] : [c.status === "paused" ? "Paused" : "Not approved", c.status === "paused" ? "other" : "you"];
+}
+
+function renderCampaignList() {
+  $("camps").innerHTML = campaigns.map((c) => {
+    const n = counts(c), [label, g] = statusOf(c);
+    return `<button class="camp ${c.id === current?.id ? "on" : ""}" data-id="${c.id}" aria-pressed="${c.id === current?.id}">
+      <div class="name"><span>${esc(c.name)}</span><span class="pill g-${g}">${label}</span></div>
+      <div class="mini">Sent <b>${n.sent}</b> · Waiting <b>${n.waiting}</b> · Needs you <b>${n.you}</b></div></button>`;
+  }).join("");
+  document.querySelectorAll(".camp").forEach((el) => el.onclick = () => selectCampaign(el.dataset.id));
+}
+
+async function selectCampaign(id) {
+  if (id === current?.id) return;
+  current = campaigns.find((c) => c.id === id) || current;
+  filter = "all";
+  $("search").value = "";
+  $("previewCard").style.display = "none";
+  actions = [];
+  history.replaceState(null, "", "#" + encodeURIComponent(current.name));
+  try { localStorage.setItem("campaign", current.name); } catch {}
+  renderCampaignList();
+  renderCampaign();
+  renderRows();
+  await loadRows();
+}
+
+function counts(c = current) {
+  const out = { all: 0, sent: 0, already: 0, you: 0, waiting: 0, other: 0 };
+  for (const [state, n] of Object.entries(c?.ledger || {})) { out[STATES[state]?.[1] || "other"] += n; out.all += n; }
+  return out;
+}
+
+function renderCampaign() {
+  if (!current) { banner("No campaign yet. Ask Claude to create one, or run engage-save.", "other"); return; }
+  const c = counts();
+  $("stats").innerHTML = GROUPS.map(([g, label]) =>
+    `<div class="stat g-${g} ${filter === g ? "on" : ""}" data-g="${g}"><span>${label}</span><b>${c[g]}</b></div>`).join("");
+  document.querySelectorAll(".stat").forEach((el) => el.onclick = () => { filter = el.dataset.g; renderCampaign(); renderRows(); });
+  const st = statusOf(current);
+  $("campTitle").textContent = current.name;
+  $("campStatus").innerHTML = `<span class="pill g-${st[1]}">${st[0]}</span>`;
+  $("campKeywords").textContent = "Keywords: " + current.keywords.join(", ");
+  $("campLinks").innerHTML = Object.entries(current.media_links).map(([id, link]) =>
+    link ? `<a href="${esc(link)}" target="_blank" rel="noopener">${esc(link)}</a>` : esc(id)).join("<br>");
+  $("campDm").textContent = current.dm_message;
+  $("repliesSummary").textContent = `Public replies (${current.replies.length}, rotating)`;
+  $("campReplies").innerHTML = current.replies.map((r) => `<li>${esc(r)}</li>`).join("");
+  $("batch").max = current.max_actions_per_run;
+  if (+$("batch").value > current.max_actions_per_run) $("batch").value = current.max_actions_per_run;
+  $("runBtn").disabled = !current.approved || isBusy;
+  $("runBtn").title = current.approved ? "" : "Approve the campaign first";
+}
+
+async function loadRows() {
+  if (!current) return;
+  const id = current.id;
+  const rows = await api(`/api/engagement/campaigns/${id}/actions`);
+  if (id !== current.id) return;  // switched campaign while loading
+  actions = rows;
+  renderRows();
+  loadRuns();
+}
+
+function summary(counts) {
+  return Object.entries(counts || {}).map(([k, n]) => `${(STATES[k]?.[0] || k).replace("Sent by engine: ", "sent ")}: ${n}`).join(", ");
+}
+
+async function loadRuns() {
+  try {
+    const runs = await api(`/api/engagement/campaigns/${current.id}/runs`);
+    $("runs").innerHTML = runs.map((r) => `<tr><td>${fmt(r.at)}</td><td>${esc(r.trigger)}</td>
+      <td class="t">${esc(summary(r.counts) || "Nothing to send")}${r.recovered ? ` · ${r.recovered} interrupted settled` : ""}${r.deferred ? ` · ${r.deferred} left` : ""}</td>
+      <td class="t">${r.aborted ? `<span class="pill g-you">Stopped</span> ${esc(r.aborted)}` : `<span class="pill g-sent">Finished</span>`}${(r.warnings || []).map((w) => `<br><span class="pill g-you">Warning</span> ${esc(w)}`).join("")}</td>
+      <td>${r.api_calls ?? ""}${r.usage_pct ? ` (Meta ${Math.round(r.usage_pct)}%)` : ""}</td></tr>`).join("")
+      || `<tr><td colspan="5" class="muted">No live runs logged yet.</td></tr>`;
+  } catch (e) { $("runs").innerHTML = `<tr><td colspan="5" class="muted">${esc(e.message)}</td></tr>`; }
+}
+
+function renderRows() {
+  const q = $("search").value.trim().toLowerCase();
+  const now = Date.now();
+  const rows = actions
+    .filter((a) => filter === "all" || STATES[a.state]?.[1] === filter)
+    .filter((a) => !q || a.username.toLowerCase().includes(q) || a.comment.toLowerCase().includes(q))
+    .sort((a, b) => new Date(a.comment_at) - new Date(b.comment_at));
+  $("rows").innerHTML = rows.map((a, i) => {
+    const [label, g] = STATES[a.state] || [a.state, "other"];
+    const deadline = new Date(new Date(a.comment_at).getTime() + 7 * 864e5);
+    const due = a.state === "queued" ? `${fmt(deadline)} (${Math.round((deadline - now) / 36e5)} h)` : "";
+    const upd = ["done", "dm_only", "dm_failed", "skipped_history"].includes(a.state) ? fmt(a.updated_at) : "";
+    return `<tr><td>${i + 1}</td><td><a href="https://www.instagram.com/${esc(a.username)}/" target="_blank" rel="noopener">@${esc(a.username)}</a></td>
+      <td class="t">${esc(a.comment)}</td><td>${fmt(a.comment_at)}</td><td><span class="pill g-${g}">${label}</span></td>
+      <td>${upd}</td><td>${due}</td><td class="t">${esc(a.reply)}</td><td class="t muted">${esc(a.error)}</td></tr>`;
+  }).join("") || `<tr><td colspan="9" class="muted">Nothing here. "Refresh from Instagram" loads the comments.</td></tr>`;
+}
+
+async function loadScheduler() {
+  try {
+    const s = await api("/api/engagement/scheduler");
+    const kv = s.installed
+      ? [["State", `<span class="pill g-sent">Enabled</span> ${esc(s.state)}`], ["Next run", fmt(s.next_run)],
+         ["Last run", s.last_run?.startsWith("1999") ? "not yet" : fmt(s.last_run)], ["Last result", { "0": "OK", "267011": "not run yet", "267009": "running now" }[s.last_result] || "code " + esc(s.last_result)]]
+      : [["State", `<span class="pill g-other">Disabled</span>`]];
+    $("schedKv").innerHTML = kv.map(([k, v]) => `<span class="muted">${k}</span><span>${v || ""}</span>`).join("");
+  } catch (e) { $("schedKv").innerHTML = `<span class="muted">Error</span><span>${esc(e.message)}</span>`; }
+}
+
+function describe(job) {
+  const kind = { run: "Batch", dry_run: "Dry run", sync: "Refresh" }[job.kind];
+  if (job.running) return `${kind} running since ${fmt(job.started_at)}…`;
+  if (job.error) return `${kind} stopped: ${job.error}`;
+  const r = job.result || {};
+  const c = summary(r.counts);
+  return `${kind} finished ${fmt(job.finished_at)}. ${r.aborted ? "Stopped: " + r.aborted + ". " : ""}${(r.warnings || []).map((w) => "Warning: " + w + ". ").join("")}${c || "Nothing to do."}${r.deferred ? ` · ${r.deferred} left for next batches` : ""}`;
+}
+
+function renderPreview(job) {
+  if (job.kind !== "dry_run" || !job.result) return;
+  const items = job.result.items || [];
+  $("previewCard").style.display = "";
+  $("previewBody").innerHTML = items.map((i, n) =>
+    `<tr><td>${n + 1}</td><td>@${esc(i.username)}</td><td class="t">${esc(i.comment)}</td>
+     <td>${i.state === "would_send" ? "Send DM" + (i.reply ? " + reply" : " only") : esc(STATES[i.state]?.[0] || i.state)}</td>
+     <td class="t">${esc(i.reply)}</td></tr>`).join("") || `<tr><td colspan="5" class="muted">Nobody to message right now.</td></tr>`;
+}
+
+async function poll() {
+  try {
+    const s = await api("/api/engagement/job");
+    const job = s.job;
+    const busy = (job && job.running) || s.lock_active;
+    isBusy = busy;
+    ["runBtn", "dryBtn", "syncBtn"].forEach((id) => $(id).disabled = busy || (id === "runBtn" && !current?.approved));
+    if (job) $("jobLine").textContent = describe(job);
+    if (s.lock_active && !(job && job.running)) banner("A run is in progress (scheduler or command line). Buttons unlock when it ends.", "waiting");
+    else if (job && job.running) banner(describe(job), "waiting");
+    else banner("", "");
+    const finishedNow = job && !job.running && job.id !== lastJobId;
+    if (finishedNow) { lastJobId = job.id; renderPreview(job); }
+    if (busy || finishedNow || wasBusy) { await loadCampaigns(); await loadRows(); }  // live counts while sending
+    wasBusy = busy;
+    schedule(busy ? 4000 : 15000);
+  } catch (e) { banner("Lost connection to the local server: is it still running? " + e.message, "you"); schedule(10000); }
+}
+
+async function start(path, body, confirmText) {
+  if (confirmText && !confirm(confirmText)) return;
+  try { await api(path, { method: "POST", body: JSON.stringify(body || {}) }); $("previewCard").style.display = "none"; schedule(300); }
+  catch (e) { alert(e.message); }
+}
+
+$("search").oninput = renderRows;
+$("runBtn").onclick = () => start(`/api/engagement/campaigns/${current.id}/run`, { max_actions: +$("batch").value },
+  `Send the DM + public reply to up to ${$("batch").value} people now?`);
+$("dryBtn").onclick = () => start(`/api/engagement/campaigns/${current.id}/run`, { dry_run: true, max_actions: +$("batch").value });
+$("syncBtn").onclick = () => start(`/api/engagement/campaigns/${current.id}/sync`);
+$("approveBtn").onclick = async () => {
+  if (!confirm("Approve this exact DM text and replies for live sending?\n\n" + current.dm_message)) return;
+  try { await api(`/api/engagement/campaigns/${current.id}/approve`, { method: "POST" }); await loadCampaigns(); } catch (e) { alert(e.message); }
+};
+$("pauseBtn").onclick = async () => {
+  try { await api(`/api/engagement/campaigns/${current.id}/pause`, { method: "POST" }); await loadCampaigns(); } catch (e) { alert(e.message); }
+};
+$("schedOn").onclick = async () => {
+  try { await api("/api/engagement/scheduler", { method: "POST", body: JSON.stringify({ enabled: true, every_minutes: +$("every").value }) }); loadScheduler(); }
+  catch (e) { alert(e.message); }
+};
+$("schedOff").onclick = async () => {
+  if (!confirm("Disable the scheduled runs? You can still send batches from here.")) return;
+  try { await api("/api/engagement/scheduler", { method: "POST", body: JSON.stringify({ enabled: false }) }); loadScheduler(); }
+  catch (e) { alert(e.message); }
+};
+
+(async () => { await loadCampaigns(); await loadRows(); loadScheduler(); setInterval(loadScheduler, 60000); poll(); })();
+</script>
+</body>
+</html>
